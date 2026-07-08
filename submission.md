@@ -151,13 +151,23 @@ Reason for selection: each bug is reproducible with controlled inputs and maps c
 1. Issue number and title
   - Issue #5: The newest playlist entry is consistently missing from API results.
 2. How I reproduced it
-  - Completed in Milestone 2 section above.
+  - I called GET /playlists/<friday_energy_id>/songs and captured API count.
+  - I compared that count with direct playlist_entries count for the same playlist.
+  - Pre-fix, API returned 6 while DB had 7.
 3. How I found the root cause
-  - To be completed in Milestone 3 after fix.
+  - Navigation path: routes/playlists.py get_songs -> services/playlist_service.py get_playlist_songs.
+  - In get_playlist_songs, the SQL query returned ordered songs correctly.
+  - The bug appeared in the final return expression, which sliced the list before serialization.
 4. The root cause
-  - To be completed in Milestone 3 after fix.
+  - The service returned songs[:-1] instead of songs.
+  - That slice always drops exactly one element: the last song in the ordered result set.
+  - Because songs are ordered by ascending playlist position, the newest entry (highest position) was always omitted.
 5. My fix and side-effect check
-  - To be completed in Milestone 3 after fix.
+  - Fix: changed the return expression to serialize all songs without slicing.
+  - Side-effect checks:
+    - Ran pytest tests/test_playlists.py -q (all passed).
+    - Re-seeded and verified Friday Energy API count now matches DB count (7 vs 7).
+    - Confirmed ordering behavior remained intact via playlist order test coverage.
 
 ## Milestone 4 Checklist Artifacts
 - git log --oneline screenshot: to add in Milestone 4

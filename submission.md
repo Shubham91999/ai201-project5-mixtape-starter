@@ -1,7 +1,23 @@
 # Mixtape Bug Hunt Submission
 
 ## AI Usage
-This section will be completed in Milestone 4 after all bug work is done.
+I used AI as a code navigation and reasoning partner, not as an unverified bug guesser.
+
+How I used AI during codebase orientation:
+- Summarized file responsibilities across app.py, models.py, routes/, services/, seed_data.py, and tests/.
+- Traced end-to-end call chains from routes to services (for example, playlist add and notification retrieval paths).
+- Helped build the initial codebase map before bug fixes.
+
+How I used AI during debugging:
+- Structured reproduction work first, then validated behavior with concrete API and service-level checks.
+- Compared working and non-working code paths (playlist-add notification vs rating path) to identify architectural mismatch.
+- Helped narrow root-cause conditions in streak and playlist retrieval logic after the suspicious code was already found.
+
+Where I verified or overrode AI output:
+- All hypotheses were verified by running code and checking outputs before implementing changes.
+- I validated fixes with targeted tests and direct reproduction checks after each change.
+- I adjusted the initial bug-fix order after reproduction evidence showed a more deterministic path with Issues 1, 4, and 5.
+- I did not accept unverified explanations as root cause; RCA entries were written only after confirmed reproduction, code trace, and fix verification.
 
 ## Codebase Map (Written Before Bug Fixing)
 

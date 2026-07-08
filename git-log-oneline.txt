@@ -1,0 +1,5 @@
+6886cd7 fix: return complete ordered playlist song list
+d7831c9 fix: send notification when shared songs are rated
+149082f fix: correct Sunday consecutive-day streak increment logic
+2dfdeaa Add .gitignore file and update README with setup instructions
+7b64551 initial commit

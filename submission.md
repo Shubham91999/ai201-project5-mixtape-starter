@@ -186,4 +186,4 @@ Reason for selection: each bug is reproducible with controlled inputs and maps c
     - Confirmed ordering behavior remained intact via playlist order test coverage.
 
 ## Milestone 4 Checklist Artifacts
-- git log --oneline screenshot: to add in Milestone 4
+- git log --oneline screenshot: Screenshot.png (repo root)

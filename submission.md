@@ -185,5 +185,49 @@ Reason for selection: each bug is reproducible with controlled inputs and maps c
     - Re-seeded and verified Friday Energy API count now matches DB count (7 vs 7).
     - Confirmed ordering behavior remained intact via playlist order test coverage.
 
+### 4) Issue #2: Friends Listening Now shows people from yesterday
+1. Issue number and title
+  - Issue #2: Friends Listening Now includes previous-day listens.
+2. How I reproduced it
+  - I created an isolated friend relationship between nova and a new user old_listener_only.
+  - I inserted one ListeningEvent for old_listener_only at 23:00 UTC on the previous calendar day.
+  - I requested GET /feed/<nova_id>/listening-now.
+  - Before the fix, the previous-day listener appeared in the feed.
+3. How I found the root cause
+  - Navigation path: routes/feed.py listening_now -> services/feed_service.py get_friends_listening_now.
+  - The service used a rolling 24-hour cutoff (now - timedelta(hours=24)).
+  - That logic allows events from yesterday evening to remain visible the next morning, which conflicts with the requirement to show only today.
+4. The root cause
+  - The recency filter was based on a 24-hour sliding window instead of calendar-day boundary.
+  - Users with last listens late yesterday were still included until the same hour today.
+5. My fix and side-effect check
+  - Fix: replaced the rolling 24-hour cutoff with UTC start-of-day cutoff (today at 00:00:00 UTC).
+  - Side-effect checks:
+    - Isolated repro user with only yesterday event is now excluded.
+    - Existing same-day friend events still appear in feed.
+
+### 5) Issue #3: The same song keeps showing up twice in search
+1. Issue number and title
+  - Issue #3: Search can return repeated rows for multi-tag songs.
+2. How I reproduced it
+  - Using seeded data, I inspected the same joined shape used by search (Song outer-joined with song_tags) for query "Crown Heights".
+  - The joined result returned 3 rows for Crown Heights Anthem but only 1 unique song ID.
+3. How I found the root cause
+  - Navigation path: routes/songs.py search -> services/search_service.py search_songs.
+  - The query joined song_tags even though filtering only used Song title/artist fields.
+  - Multi-tag songs produce one joined row per tag, creating duplicate logical matches.
+4. The root cause
+  - Join multiplicity from song_tags was not deduplicated in the search query.
+  - A single song with multiple tags can fan out into duplicate rows.
+5. My fix and side-effect check
+  - Fix: added .distinct() to the search query so each matching song is returned once.
+  - Side-effect checks:
+    - Ran pytest tests/test_search.py -q (all passed).
+    - Verified multi-tag title query still returns matching song while preserving one-result-per-song behavior.
+
 ## Milestone 4 Checklist Artifacts
 - git log --oneline screenshot: Screenshot.png (repo root)
+
+## Regression Test Added (Stretch Goal)
+- tests/test_notifications.py
+  - test_rating_creates_notification_for_song_owner validates that rating another user's shared song creates a song_rated notification.

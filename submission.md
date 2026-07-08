@@ -126,13 +126,26 @@ Reason for selection: each bug is reproducible with controlled inputs and maps c
 1. Issue number and title
   - Issue #4: Missing notification when a shared song is rated.
 2. How I reproduced it
-  - Completed in Milestone 2 section above.
+  - Using seeded data, I rated Crown Heights Anthem as nova via POST /songs/<song_id>/rate.
+  - Before and after calls to GET /users/<song_owner_id>/notifications showed count stayed at 0 pre-fix.
+  - Rating returned 201 and persisted, but no notification was created.
 3. How I found the root cause
-  - To be completed in Milestone 3 after fix.
+  - Navigation path: routes/songs.py rate -> services/notification_service.py rate_song.
+  - I compared rate_song with the working add_to_playlist path in the same service.
+  - add_to_playlist performs the business action and then calls create_notification, while rate_song only saved/upserted Rating and returned.
+  - This structural mismatch showed exactly why ratings never generated notifications.
 4. The root cause
-  - To be completed in Milestone 3 after fix.
+  - The rating workflow persisted data but omitted notification creation entirely.
+  - There was no call to create_notification in rate_song after a successful rating, so users never received song_rated notifications.
 5. My fix and side-effect check
-  - To be completed in Milestone 3 after fix.
+  - Fix: added a post-commit notification step in rate_song.
+  - Implementation details:
+    - If rater is not the song owner, call create_notification with type song_rated and a descriptive body.
+    - Keep self-rating excluded to avoid self-notification noise.
+  - Side-effect checks:
+    - Re-seeded data, rated another user's shared song, and confirmed notification count increased and latest type was song_rated.
+    - Rated own song and confirmed notification count did not increase.
+    - Confirmed rating endpoint still returned 201 and saved score updates.
 
 ### 3) Issue #5: The last song in a playlist never shows up
 1. Issue number and title
